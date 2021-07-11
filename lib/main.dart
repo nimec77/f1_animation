@@ -74,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Stack(
             clipBehavior: Clip.none,
             alignment: Alignment.bottomLeft,
-            children: <Widget>[
+            children: [
               ListView.builder(
                   controller: _scrollController,
                   physics: const F1ScrollPhysics(),
@@ -83,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   itemBuilder: (context, position) {
                     return _getImage(position);
                   }),
-              _getInfo()
+              _getInfo(),
             ],
           ),
         ));
@@ -96,9 +96,9 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+        children: [
           Row(
-            children: <Widget>[
+            children: [
               SizedBox(
                   width: 30,
                   child: Text(

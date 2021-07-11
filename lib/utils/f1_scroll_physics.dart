@@ -10,7 +10,6 @@ class F1ScrollPhysics extends ScrollPhysics {
   }
 
   double _getPage(ScrollPosition position) {
-    debugPrint('Page: ${position.pixels / (position.viewportDimension * 2)}');
     return position.pixels / (position.viewportDimension * 2);
   }
 
@@ -20,6 +19,7 @@ class F1ScrollPhysics extends ScrollPhysics {
 
   double _getTargetPixels(ScrollPosition position, Tolerance tolerance, double velocity) {
     var page = _getPage(position);
+    debugPrint('_getTargetPixels Page: $page');
     if (velocity < -tolerance.velocity) {
       page -= 0.5;
     } else if (velocity > tolerance.velocity) {
