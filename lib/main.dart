@@ -1,11 +1,14 @@
+import 'dart:math';
+
+import 'package:f1_drivers/model/driver.dart';
 import 'package:f1_drivers/utils/f1_scroll_physics.dart';
 import 'package:flutter/material.dart';
-import 'dart:math';
-import 'package:f1_drivers/model/driver.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -14,32 +17,31 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         backgroundColor: Colors.black,
-        fontFamily: "PTMono",
+        fontFamily: 'PTMono',
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: const MyHomePage(),
     );
   }
 }
 
-const String ALL_CHARS =
-    "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const String kAllChars = 'abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key}) : super(key: key);
+  const MyHomePage({Key? key}) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  ScrollController _scrollController = ScrollController();
-  double pageFraction = 0.0;
+  final ScrollController _scrollController = ScrollController();
 
   int driverNumber = 0;
-  String firstName = "";
-  String lastName = "";
-  String team = "";
+  String firstName = '';
+  String lastName = '';
+  String team = '';
+  double pageFraction = 0.0;
 
   @override
   void initState() {
@@ -52,13 +54,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _scrollController.addListener(() {
       setState(() {
-        pageFraction =
-            _scrollController.offset / (MediaQuery.of(context).size.width * 2);
+        pageFraction = _scrollController.offset / (MediaQuery.of(context).size.width * 2);
 
-        driverNumber = _calculateDriverNumber();
-        firstName = _calculateCharacters(StringType.FIRST_NAME);
-        lastName = _calculateCharacters(StringType.LAST_NAME);
-        team = _calculateCharacters(StringType.TEAM);
+        driverNumber = _calculateDriverNumber(pageFraction);
+        firstName = _calculateCharacters(pageFraction, StringType.firstName);
+        lastName = _calculateCharacters(pageFraction, StringType.lastName);
+        team = _calculateCharacters(pageFraction, StringType.team);
       });
     });
   }
@@ -67,16 +68,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: Colors.black,
-        body: Container(
+        body: SizedBox(
           width: MediaQuery.of(context).size.width * 2,
           height: MediaQuery.of(context).size.height,
           child: Stack(
-            overflow: Overflow.visible,
+            clipBehavior: Clip.none,
             alignment: Alignment.bottomLeft,
             children: <Widget>[
               ListView.builder(
                   controller: _scrollController,
-                  physics: F1ScrollPhysics(),
+                  physics: const F1ScrollPhysics(),
                   scrollDirection: Axis.horizontal,
                   itemCount: drivers.length,
                   itemBuilder: (context, position) {
@@ -102,13 +103,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   width: 30,
                   child: Text(
                     driverNumber.toString(),
-                    style: TextStyle(fontSize: 24, color: Colors.white),
+                    style: const TextStyle(fontSize: 24, color: Colors.white),
                   )),
-              SizedBox(
-                width: 16,
-              ),
+              const SizedBox(width: 16),
               Image.asset(
-                "assets/${drivers[pageFraction.round()].nationality}.png",
+                'assets/${drivers[pageFraction.round() < drivers.length ? pageFraction.round() : drivers.length - 1].nationality}.png',
                 height: 32,
                 width: 32,
               )
@@ -116,15 +115,15 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           Text(
             firstName,
-            style: TextStyle(fontSize: 32, color: Colors.white),
+            style: const TextStyle(fontSize: 32, color: Colors.white),
           ),
           Text(
             lastName,
-            style: TextStyle(fontSize: 32, color: Colors.white),
+            style: const TextStyle(fontSize: 32, color: Colors.white),
           ),
           Text(
             team,
-            style: TextStyle(fontSize: 20, color: Colors.white54),
+            style: const TextStyle(fontSize: 20, color: Colors.white54),
           ),
         ],
       ),
@@ -133,72 +132,75 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _getImage(int position) {
     return Image.asset(
-      "assets/${drivers[position].image}.jpg",
+      'assets/${drivers[position].image}.jpg',
       width: MediaQuery.of(context).size.width * 2,
       fit: BoxFit.cover,
     );
   }
 
-  int _calculateDriverNumber() {
-    int lastDriverNumber = drivers[pageFraction.floor()].driverNumber;
-    int nextDriverNumber = drivers[pageFraction.ceil()].driverNumber;
+  int _calculateDriverNumber(double pageFraction) {
+    final floor = pageFraction.floor();
+    final ceil = pageFraction.ceil();
+    final lastIndex = floor < drivers.length ? floor : drivers.length - 1;
+    final nextIndex = ceil < drivers.length ? ceil : drivers.length - 1;
 
-    double currentFraction = pageFraction % 1;
-    int current = lastDriverNumber -
-        ((lastDriverNumber - nextDriverNumber) * currentFraction).round();
+    final lastDriverNumber = drivers[lastIndex].driverNumber;
+    final nextDriverNumber = drivers[nextIndex].driverNumber;
+
+    final currentFraction = pageFraction % 1;
+    final current = lastDriverNumber - ((lastDriverNumber - nextDriverNumber) * currentFraction).round();
 
     return current;
   }
 
-  String _calculateCharacters(StringType stringType) {
-    String last = "";
-    String next = "";
+  String _calculateCharacters(double pageFraction, StringType stringType) {
+    var last = '';
+    var next = '';
 
+    final floor = pageFraction.floor();
+    final ceil = pageFraction.ceil();
+    final lastIndex = floor < drivers.length ? floor : drivers.length - 1;
+    final nextIndex = ceil < drivers.length ? ceil : drivers.length - 1;
     switch (stringType) {
-      case StringType.FIRST_NAME:
+      case StringType.firstName:
         {
-          last = drivers[pageFraction.floor()].firstName;
-          next = drivers[pageFraction.ceil()].firstName;
+          last = drivers[lastIndex].firstName;
+          next = drivers[nextIndex].firstName;
           break;
         }
-      case StringType.LAST_NAME:
+      case StringType.lastName:
         {
-          last = drivers[pageFraction.floor()].lastName;
-          next = drivers[pageFraction.ceil()].lastName;
+          last = drivers[lastIndex].lastName;
+          next = drivers[nextIndex].lastName;
           break;
         }
       default:
         {
-          last = drivers[pageFraction.floor()].team;
-          next = drivers[pageFraction.ceil()].team;
+          last = drivers[lastIndex].team;
+          next = drivers[nextIndex].team;
           break;
         }
     }
 
-    int longestTeam = max(last.length, next.length);
+    final longestTeam = max(last.length, next.length);
 
-    String currentTeam = "";
+    var currentTeam = '';
 
     for (var i = 0; i < longestTeam; i++) {
-      String lastTeamChar = " ";
-      String nextTeamChar = " ";
+      var lastTeamChar = ' ';
+      var nextTeamChar = ' ';
 
-      try {
-        lastTeamChar = last[i];
-      } catch (e) {}
-      try {
-        nextTeamChar = next[i];
-      } catch (e) {}
+      lastTeamChar = i < last.length ? last[i] : ' ';
+      nextTeamChar = i < next.length ? next[i] : ' ';
 
-      int lastIndex = ALL_CHARS.indexOf(lastTeamChar);
-      int nextIndex = ALL_CHARS.indexOf(nextTeamChar);
+      final lastIndex = kAllChars.indexOf(lastTeamChar);
+      final nextIndex = kAllChars.indexOf(nextTeamChar);
 
-      double currentFraction = pageFraction % 1;
+      final currentFraction = pageFraction % 1;
 
-      int currentIndex =
-          lastIndex - ((lastIndex - nextIndex) * currentFraction).round();
+      final currentIndex = lastIndex - ((lastIndex - nextIndex) * currentFraction).round();
 
-      currentTeam = currentTeam + ALL_CHARS[currentIndex];
+      currentTeam = currentTeam + kAllChars[currentIndex];
     }
 
     return currentTeam;
